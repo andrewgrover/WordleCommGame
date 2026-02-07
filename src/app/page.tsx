@@ -1,101 +1,142 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import GameCard from '@/components/GameCard'
+import ResultsModal from '@/components/ResultsModal'
+
+interface Game {
+  id: string
+  sport: string
+  homeTeam: string
+  awayTeam: string
+  spread: number
+  date: string
+  isComplete: boolean
+}
+
+interface UserPick {
+  pickedHome: boolean
+  result: string | null
+}
+
+interface ResultData {
+  game: {
+    sport: string
+    homeTeam: string
+    awayTeam: string
+    spread: number
+    homeScore: number
+    awayScore: number
+  }
+  pick: {
+    pickedHome: boolean
+    result: string
+  }
+}
+
+export default function HomePage() {
+  const [game, setGame] = useState<Game | null>(null)
+  const [userPick, setUserPick] = useState<UserPick | null>(null)
+  const [result, setResult] = useState<ResultData | null>(null)
+  const [showResults, setShowResults] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<{ name: string } | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    async function checkAuth() {
+      const res = await fetch('/api/auth/me')
+      const data = await res.json()
+
+      if (!data.user) {
+        router.push('/auth/login')
+        return
+      }
+
+      setUser(data.user)
+    }
+
+    checkAuth()
+  }, [router])
+
+  useEffect(() => {
+    if (!user) return
+
+    async function fetchData() {
+      try {
+        // Check for pending results first
+        const resultsRes = await fetch('/api/game/results')
+        const resultsData = await resultsRes.json()
+
+        if (resultsData.result) {
+          setResult(resultsData.result)
+          setShowResults(true)
+        }
+
+        // Fetch today's game
+        const gameRes = await fetch('/api/game/today')
+        const gameData = await gameRes.json()
+
+        if (gameData.game) {
+          setGame(gameData.game)
+          setUserPick(gameData.userPick)
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [user])
+
+  const handlePickSubmit = async () => {
+    // Refresh the game data
+    const gameRes = await fetch('/api/game/today')
+    const gameData = await gameRes.json()
+    if (gameData.game) {
+      setGame(gameData.game)
+      setUserPick(gameData.userPick)
+    }
+  }
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      {showResults && result && (
+        <ResultsModal
+          result={result}
+          onClose={() => setShowResults(false)}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      )}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      {!showResults && (
+        <>
+          {game ? (
+            <GameCard
+              game={game}
+              userPick={userPick}
+              onPickSubmit={handlePickSubmit}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          ) : (
+            <div className="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">No Game Today</h2>
+              <p className="text-gray-400">
+                Check back later! Games are updated daily.
+              </p>
+            </div>
+          )}
+        </>
+      )}
     </div>
-  );
+  )
 }
