@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { getTodaysGame } from '@/lib/game-logic'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const user = await getSession()
 

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { fetchScoresForSport, SPORT_PRIORITY } from '@/lib/odds-api'
 import { calculatePickResult } from '@/lib/game-logic'
 
+export const dynamic = 'force-dynamic'
+
 // Cron job to update game results and calculate pick outcomes
 export async function GET(request: NextRequest) {
   // Optional: Verify cron secret for security

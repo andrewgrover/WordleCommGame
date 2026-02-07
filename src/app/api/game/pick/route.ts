@@ -3,6 +3,8 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getTodaysGame } from '@/lib/game-logic'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   const user = await getSession()
 

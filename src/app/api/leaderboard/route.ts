@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getLeaderboard } from '@/lib/game-logic'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const leaderboard = await getLeaderboard()
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { selectDailyGame, getStartOfDay, getEndOfDay } from '@/lib/game-logic'
 
+export const dynamic = 'force-dynamic'
+
 // Cron job to fetch and select daily game
 // Can be called by external cron service (e.g., Vercel cron, GitHub Actions)
 export async function GET(request: NextRequest) {
