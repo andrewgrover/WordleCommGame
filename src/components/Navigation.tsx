@@ -34,7 +34,7 @@ export default function Navigation({ user }: NavigationProps) {
             />
             <span className="text-lg sm:text-xl font-bold text-white">
               <span className="hidden xs:inline">WordleCommPicks</span>
-              <span className="xs:hidden">WCP</span>
+              <span className="xs:hidden">CommPicks</span>
             </span>
           </Link>
           <Link href="/leaderboard" className="text-sm sm:text-base text-gray-300 hover:text-white transition-colors">
