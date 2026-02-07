@@ -29,6 +29,8 @@ export async function GET() {
       spread: game.spread,
       date: game.date,
       isComplete: game.isComplete,
+      homeScore: game.homeScore,
+      awayScore: game.awayScore,
     },
     userPick: userPick
       ? {
