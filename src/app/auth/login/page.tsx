@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false)
@@ -47,9 +48,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-white mb-6 text-center">
-          Sports Picks
-        </h1>
+        <div className="flex flex-col items-center mb-6">
+          <Image
+            src="/umd-logo.svg"
+            alt="UMD Logo"
+            width={64}
+            height={64}
+            className="mb-3"
+          />
+          <h1 className="text-2xl sm:text-3xl font-bold text-white text-center">
+            WordleCommPicks
+          </h1>
+        </div>
 
         {/* Tabs */}
         <div className="flex mb-6 bg-gray-700 rounded-lg p-1">

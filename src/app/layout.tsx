@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Sports Picks",
+  title: "WordleCommPicks",
   description: "Daily sports betting game for your friend group",
 };
 

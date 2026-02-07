@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 interface NavigationProps {
@@ -21,34 +22,45 @@ export default function Navigation({ user }: NavigationProps) {
 
   return (
     <nav className="bg-gray-800 border-b border-gray-700">
-      <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="text-xl font-bold text-white hover:text-blue-400 transition-colors">
-            Sports Picks
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3 sm:gap-6">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Image
+              src="/umd-logo.svg"
+              alt="UMD Logo"
+              width={36}
+              height={36}
+              className="w-8 h-8 sm:w-9 sm:h-9"
+            />
+            <span className="text-lg sm:text-xl font-bold text-white">
+              <span className="hidden xs:inline">WordleCommPicks</span>
+              <span className="xs:hidden">WCP</span>
+            </span>
           </Link>
-          <Link href="/leaderboard" className="text-gray-300 hover:text-white transition-colors">
-            Leaderboard
+          <Link href="/leaderboard" className="text-sm sm:text-base text-gray-300 hover:text-white transition-colors">
+            <span className="hidden sm:inline">Leaderboard</span>
+            <span className="sm:hidden">Board</span>
           </Link>
           {user?.isAdmin && (
-            <Link href="/admin" className="text-gray-300 hover:text-white transition-colors">
+            <Link href="/admin" className="text-sm sm:text-base text-gray-300 hover:text-white transition-colors">
               Admin
             </Link>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {user ? (
             <>
-              <span className="text-gray-400">{user.name}</span>
+              <span className="text-sm sm:text-base text-gray-400 hidden sm:inline">{user.name}</span>
               <button
                 onClick={handleLogout}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-sm sm:text-base text-gray-400 hover:text-white transition-colors"
               >
                 Logout
               </button>
             </>
           ) : (
-            <Link href="/auth/login" className="text-gray-300 hover:text-white transition-colors">
+            <Link href="/auth/login" className="text-sm sm:text-base text-gray-300 hover:text-white transition-colors">
               Login
             </Link>
           )}
