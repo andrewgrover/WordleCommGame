@@ -104,8 +104,12 @@ export default function HomePage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-purple-500/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin"></div>
+        </div>
+        <p className="mt-4 text-gray-400">Loading...</p>
       </div>
     )
   }
@@ -128,11 +132,20 @@ export default function HomePage() {
               onPickSubmit={handlePickSubmit}
             />
           ) : (
-            <div className="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md text-center">
-              <h2 className="text-2xl font-bold text-white mb-4">No Game Today</h2>
-              <p className="text-gray-400">
+            <div className="glass card-glow rounded-2xl p-8 w-full max-w-md text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
+                <span className="text-4xl">🏈</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">No Game Today</h2>
+              <p className="text-gray-400 mb-6">
                 Check back later! Games are updated daily.
               </p>
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Next game coming soon</span>
+              </div>
             </div>
           )}
         </>

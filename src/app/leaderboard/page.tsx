@@ -51,15 +51,22 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-purple-500/20"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin"></div>
+        </div>
+        <p className="mt-4 text-gray-400">Loading leaderboard...</p>
       </div>
     )
   }
 
   return (
     <div className="max-w-2xl mx-auto p-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-6">Leaderboard</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-3xl">🏆</span>
+        <h1 className="text-3xl font-bold gradient-text">Leaderboard</h1>
+      </div>
       <Leaderboard entries={entries} currentUserId={currentUserId} />
     </div>
   )
