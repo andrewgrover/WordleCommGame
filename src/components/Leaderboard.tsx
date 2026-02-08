@@ -21,9 +21,10 @@ function formatLeaderboardText(entries: LeaderboardEntry[]): string {
   const header = '🏆 Daily Pick Leaderboard\n\n'
   const rows = entries.map((entry, index) => {
     const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`
-    return `${medal} ${entry.name}: ${entry.points} pts (${entry.wins}W-${entry.losses}L-${entry.pushes}P)`
+    return `${medal} ${entry.name}: ${entry.points} pts`
   }).join('\n')
-  return header + rows
+  const siteLink = `\n\nPlay at: ${window.location.origin}`
+  return header + rows + siteLink
 }
 
 function RankBadge({ rank }: { rank: number }) {
