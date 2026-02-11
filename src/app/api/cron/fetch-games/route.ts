@@ -19,19 +19,20 @@ export async function GET(request: NextRequest) {
     const today = getStartOfDay()
     const tomorrow = getEndOfDay()
 
-    // Check if we already have a game for today
+    // Check if we already have an incomplete game for today
     const existingGame = await prisma.game.findFirst({
       where: {
         date: {
           gte: today,
           lte: tomorrow,
         },
+        isComplete: false,
       },
     })
 
     if (existingGame) {
       return NextResponse.json({
-        message: 'Game already exists for today',
+        message: 'Incomplete game already exists for today',
         game: {
           id: existingGame.id,
           sport: existingGame.sport,
