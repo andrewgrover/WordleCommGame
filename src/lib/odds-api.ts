@@ -4,11 +4,26 @@ const ODDS_API_KEY = process.env.ODDS_API_KEY
 const SPORT_KEYS = {
   NFL: 'americanfootball_nfl',
   NBA: 'basketball_nba',
+  NCAAB: 'basketball_ncaab',
   NHL: 'icehockey_nhl',
   MLB: 'baseball_mlb',
 } as const
 
 type Sport = keyof typeof SPORT_KEYS
+
+// Check if a team name indicates a ranked team (e.g., "#5 Duke" or "(5) Duke")
+export function isRankedTeam(teamName: string): boolean {
+  return /^#?\d+\s|^\(\d+\)\s/.test(teamName)
+}
+
+// Check if a college basketball game qualifies for priority
+// Must have a ranked team AND spread less than 15
+export function isQualifiedCollegeGame(game: GameData): boolean {
+  if (game.sport !== 'NCAAB') return false
+  const hasRankedTeam = isRankedTeam(game.homeTeam) || isRankedTeam(game.awayTeam)
+  const spreadUnder15 = Math.abs(game.spread) < 15
+  return hasRankedTeam && spreadUnder15
+}
 
 interface OddsGame {
   id: string
@@ -152,4 +167,5 @@ export async function fetchScoresForSport(sport: Sport): Promise<ScoreData[]> {
 }
 
 // Priority order for selecting daily game
-export const SPORT_PRIORITY: Sport[] = ['NFL', 'NBA', 'NHL', 'MLB']
+// NCAAB is included but has special handling - only gets priority if ranked team + spread < 15
+export const SPORT_PRIORITY: Sport[] = ['NFL', 'NBA', 'NCAAB', 'NHL', 'MLB']

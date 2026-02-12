@@ -1,5 +1,5 @@
 import { prisma } from './db'
-import { fetchGamesForSport, SPORT_PRIORITY, type GameData } from './odds-api'
+import { fetchGamesForSport, SPORT_PRIORITY, isQualifiedCollegeGame, type GameData } from './odds-api'
 
 export function getStartOfDay(date: Date = new Date()): Date {
   const d = new Date(date)
@@ -34,22 +34,36 @@ export async function getTodaysGame() {
 }
 
 export async function selectDailyGame(): Promise<GameData | null> {
-  const today = getStartOfDay()
+  const now = new Date()
   const tomorrow = getEndOfDay()
 
-  // Check for games in sport priority order
-  for (const sport of SPORT_PRIORITY) {
-    const games = await fetchGamesForSport(sport)
-
-    // Filter games happening today
-    const todaysGames = games.filter((game) => {
+  // Helper to filter games that haven't started yet
+  const filterAvailable = (games: GameData[]) =>
+    games.filter((game) => {
       const gameDate = new Date(game.date)
-      return gameDate >= today && gameDate <= tomorrow
+      return gameDate > now && gameDate <= tomorrow
     })
 
-    if (todaysGames.length > 0) {
+  // First priority: Check for qualified college basketball games
+  // (ranked team + spread < 15)
+  const ncaabGames = await fetchGamesForSport('NCAAB')
+  const availableNcaab = filterAvailable(ncaabGames)
+  const qualifiedNcaab = availableNcaab.filter(isQualifiedCollegeGame)
+
+  if (qualifiedNcaab.length > 0) {
+    return qualifiedNcaab.sort((a, b) => a.date.getTime() - b.date.getTime())[0]
+  }
+
+  // Check for games in sport priority order (skip NCAAB since we already checked)
+  for (const sport of SPORT_PRIORITY) {
+    if (sport === 'NCAAB') continue // Already handled above
+
+    const games = await fetchGamesForSport(sport)
+    const availableGames = filterAvailable(games)
+
+    if (availableGames.length > 0) {
       // Return the first game (earliest) of the highest priority sport
-      return todaysGames.sort((a, b) => a.date.getTime() - b.date.getTime())[0]
+      return availableGames.sort((a, b) => a.date.getTime() - b.date.getTime())[0]
     }
   }
 

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const today = getStartOfDay()
     const tomorrow = getEndOfDay()
 
-    // Check if we already have an incomplete game for today
+    // Disqualify any existing incomplete game for today
     const existingGame = await prisma.game.findFirst({
       where: {
         date: {
@@ -31,16 +31,12 @@ export async function GET(request: NextRequest) {
     })
 
     if (existingGame) {
-      return NextResponse.json({
-        message: 'Incomplete game already exists for today',
-        game: {
-          id: existingGame.id,
-          sport: existingGame.sport,
-          homeTeam: existingGame.homeTeam,
-          awayTeam: existingGame.awayTeam,
-          spread: existingGame.spread,
-        },
+      // Mark as complete (disqualified) - picks on this game will have no result
+      await prisma.game.update({
+        where: { id: existingGame.id },
+        data: { isComplete: true },
       })
+      console.log(`Disqualified game: ${existingGame.homeTeam} vs ${existingGame.awayTeam}`)
     }
 
     // Select a new game
