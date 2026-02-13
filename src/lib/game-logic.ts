@@ -1,5 +1,5 @@
 import { prisma } from './db'
-import { fetchGamesForSport, SPORT_PRIORITY, isQualifiedCollegeGame, type GameData } from './odds-api'
+import { fetchGamesForSport, isQualifiedCollegeGame, type GameData } from './odds-api'
 
 export function getStartOfDay(date: Date = new Date()): Date {
   const d = new Date(date)
@@ -54,9 +54,18 @@ export async function selectDailyGame(): Promise<GameData | null> {
     return qualifiedNcaab.sort((a, b) => a.date.getTime() - b.date.getTime())[0]
   }
 
-  // Check for games in sport priority order (skip NCAAB since we already checked)
-  for (const sport of SPORT_PRIORITY) {
-    if (sport === 'NCAAB') continue // Already handled above
+  // Check for games in sport priority order
+  // NFL > NBA > NCAAB (any) > NHL > MLB
+  const standardPriority: Array<'NFL' | 'NBA' | 'NCAAB' | 'NHL' | 'MLB'> = ['NFL', 'NBA', 'NCAAB', 'NHL', 'MLB']
+
+  for (const sport of standardPriority) {
+    // For NCAAB, reuse the games we already fetched
+    if (sport === 'NCAAB') {
+      if (availableNcaab.length > 0) {
+        return availableNcaab.sort((a, b) => a.date.getTime() - b.date.getTime())[0]
+      }
+      continue
+    }
 
     const games = await fetchGamesForSport(sport)
     const availableGames = filterAvailable(games)
