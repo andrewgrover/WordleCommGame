@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { selectDailyGame, getStartOfDay, getEndOfDay } from '@/lib/game-logic'
+import { selectDailyGame } from '@/lib/game-logic'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,27 +16,20 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const today = getStartOfDay()
-    const tomorrow = getEndOfDay()
-
-    // Disqualify any existing incomplete game for today
-    const existingGame = await prisma.game.findFirst({
+    // Disqualify ALL incomplete games (not just today's)
+    // This handles edge cases where yesterday's game wasn't marked complete
+    const incompleteGames = await prisma.game.findMany({
       where: {
-        date: {
-          gte: today,
-          lte: tomorrow,
-        },
         isComplete: false,
       },
     })
 
-    if (existingGame) {
-      // Mark as complete (disqualified) - picks on this game will have no result
+    for (const game of incompleteGames) {
       await prisma.game.update({
-        where: { id: existingGame.id },
+        where: { id: game.id },
         data: { isComplete: true },
       })
-      console.log(`Disqualified game: ${existingGame.homeTeam} vs ${existingGame.awayTeam}`)
+      console.log(`Disqualified game: ${game.homeTeam} vs ${game.awayTeam}`)
     }
 
     // Select a new game
