@@ -14,23 +14,21 @@ export function getEndOfDay(date: Date = new Date()): Date {
 }
 
 export async function getTodaysGame() {
-  const today = getStartOfDay()
-  const tomorrow = getEndOfDay()
-
-  // First check for any existing game for today
-  const existingGame = await prisma.game.findFirst({
+  // Return the most recent incomplete game
+  // This ensures we always show the current active game, not old completed ones
+  const incompleteGame = await prisma.game.findFirst({
     where: {
-      date: {
-        gte: today,
-        lte: tomorrow,
-      },
+      isComplete: false,
+    },
+    orderBy: {
+      date: 'desc',
     },
     include: {
       picks: true,
     },
   })
 
-  return existingGame
+  return incompleteGame
 }
 
 export async function selectDailyGame(): Promise<GameData | null> {
