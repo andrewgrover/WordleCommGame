@@ -16,13 +16,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Find games that are not complete and have passed their start time
+    // Find games that need results: either not complete, or complete but missing scores
     const incompleteGames = await prisma.game.findMany({
       where: {
-        isComplete: false,
         date: {
           lt: new Date(),
         },
+        OR: [
+          { isComplete: false },
+          { isComplete: true, homeScore: null },
+        ],
       },
       include: {
         picks: true,

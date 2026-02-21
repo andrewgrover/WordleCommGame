@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { selectDailyGame } from '@/lib/game-logic'
+import { selectDailyGame, calculatePickResult } from '@/lib/game-logic'
+import { fetchScoresForSport, SPORT_PRIORITY } from '@/lib/odds-api'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,20 +17,84 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Disqualify ALL incomplete games (not just today's)
-    // This handles edge cases where yesterday's game wasn't marked complete
+    // Try to resolve scores for all incomplete past games before marking them complete
     const incompleteGames = await prisma.game.findMany({
       where: {
         isComplete: false,
       },
+      include: {
+        picks: true,
+      },
     })
 
+    const resolvedGames: string[] = []
+    const unresolvedGames: string[] = []
+
+    // Fetch scores and update results for incomplete games
+    const sportsWithGames = Array.from(new Set(incompleteGames.map((g) => g.sport))) as Array<
+      (typeof SPORT_PRIORITY)[number]
+    >
+
+    for (const sport of sportsWithGames) {
+      const scores = await fetchScoresForSport(sport)
+
+      for (const game of incompleteGames.filter((g) => g.sport === sport)) {
+        const scoreData = scores.find(
+          (s) =>
+            (s.homeTeam === game.homeTeam && s.awayTeam === game.awayTeam) ||
+            (s.homeTeam.includes(game.homeTeam) && s.awayTeam.includes(game.awayTeam))
+        )
+
+        if (scoreData && scoreData.completed) {
+          // Update game with scores and mark complete
+          await prisma.game.update({
+            where: { id: game.id },
+            data: {
+              homeScore: scoreData.homeScore,
+              awayScore: scoreData.awayScore,
+              isComplete: true,
+            },
+          })
+
+          // Calculate and update pick results
+          for (const pick of game.picks) {
+            const result = calculatePickResult(
+              pick.pickedHome,
+              scoreData.homeScore,
+              scoreData.awayScore,
+              game.spread
+            )
+
+            await prisma.pick.update({
+              where: { id: pick.id },
+              data: { result },
+            })
+          }
+
+          resolvedGames.push(`${game.homeTeam} vs ${game.awayTeam}`)
+          console.log(`Resolved scores: ${game.homeTeam} vs ${game.awayTeam}`)
+        } else {
+          // No scores available — mark complete without scores so it doesn't block new games
+          await prisma.game.update({
+            where: { id: game.id },
+            data: { isComplete: true },
+          })
+          unresolvedGames.push(`${game.homeTeam} vs ${game.awayTeam}`)
+          console.log(`No scores found, marking complete: ${game.homeTeam} vs ${game.awayTeam}`)
+        }
+      }
+    }
+
+    // Handle incomplete games with no sport match (shouldn't happen, but safety net)
     for (const game of incompleteGames) {
-      await prisma.game.update({
-        where: { id: game.id },
-        data: { isComplete: true },
-      })
-      console.log(`Disqualified game: ${game.homeTeam} vs ${game.awayTeam}`)
+      if (!resolvedGames.includes(`${game.homeTeam} vs ${game.awayTeam}`) &&
+          !unresolvedGames.includes(`${game.homeTeam} vs ${game.awayTeam}`)) {
+        await prisma.game.update({
+          where: { id: game.id },
+          data: { isComplete: true },
+        })
+        unresolvedGames.push(`${game.homeTeam} vs ${game.awayTeam}`)
+      }
     }
 
     // Select a new game
@@ -62,6 +127,8 @@ export async function GET(request: NextRequest) {
         awayTeam: game.awayTeam,
         spread: game.spread,
       },
+      resolvedGames,
+      unresolvedGames,
     })
   } catch (error) {
     console.error('Cron fetch-games error:', error)
