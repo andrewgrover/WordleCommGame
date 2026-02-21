@@ -170,6 +170,7 @@ export default function AdminPage() {
             >
               <option value="NFL">NFL</option>
               <option value="NBA">NBA</option>
+              <option value="NCAAB">NCAAB</option>
               <option value="NHL">NHL</option>
               <option value="MLB">MLB</option>
             </select>
