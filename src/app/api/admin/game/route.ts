@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { getStartOfDay, getEndOfDay } from '@/lib/game-logic'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,36 +23,18 @@ export async function POST(request: NextRequest) {
   }
 
   const gameDate = date ? new Date(date) : new Date()
-  const today = getStartOfDay(gameDate)
-  const tomorrow = getEndOfDay(gameDate)
 
-  // Check if a game already exists for this date
-  const existingGame = await prisma.game.findFirst({
+  // Mark all existing incomplete games as complete so the manual game takes over
+  await prisma.game.updateMany({
     where: {
-      date: {
-        gte: today,
-        lte: tomorrow,
-      },
+      isComplete: false,
+    },
+    data: {
+      isComplete: true,
     },
   })
 
-  if (existingGame) {
-    // Update the existing game
-    const updatedGame = await prisma.game.update({
-      where: { id: existingGame.id },
-      data: {
-        sport,
-        homeTeam,
-        awayTeam,
-        spread: parseFloat(spread),
-        isManual: true,
-      },
-    })
-
-    return NextResponse.json({ success: true, game: updatedGame, updated: true })
-  }
-
-  // Create a new game
+  // Create a new manual game (always fresh so it becomes the active game)
   const game = await prisma.game.create({
     data: {
       date: gameDate,

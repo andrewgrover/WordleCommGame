@@ -17,6 +17,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Check if there's an active manual game — if so, don't override it
+    const activeManualGame = await prisma.game.findFirst({
+      where: {
+        isComplete: false,
+        isManual: true,
+      },
+    })
+
+    if (activeManualGame) {
+      return NextResponse.json({
+        message: 'Skipping — active manual game exists',
+        game: {
+          id: activeManualGame.id,
+          sport: activeManualGame.sport,
+          homeTeam: activeManualGame.homeTeam,
+          awayTeam: activeManualGame.awayTeam,
+        },
+      })
+    }
+
     // Try to resolve scores for all incomplete past games before marking them complete
     const incompleteGames = await prisma.game.findMany({
       where: {
