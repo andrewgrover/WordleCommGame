@@ -25,6 +25,7 @@ export default function AdminPage() {
   const [homeTeam, setHomeTeam] = useState('')
   const [awayTeam, setAwayTeam] = useState('')
   const [spread, setSpread] = useState('')
+  const [gameTime, setGameTime] = useState('')
 
   // Form state for updating scores
   const [homeScore, setHomeScore] = useState('')
@@ -61,6 +62,10 @@ export default function AdminPage() {
         setHomeTeam(gameData.game.homeTeam)
         setAwayTeam(gameData.game.awayTeam)
         setSpread(gameData.game.spread.toString())
+        // Convert UTC date to local datetime-local format
+        const d = new Date(gameData.game.date)
+        const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        setGameTime(local.toISOString().slice(0, 16))
         if (gameData.game.homeScore !== null) {
           setHomeScore(gameData.game.homeScore.toString())
         }
@@ -89,6 +94,7 @@ export default function AdminPage() {
           homeTeam,
           awayTeam,
           spread: parseFloat(spread),
+          date: gameTime ? new Date(gameTime).toISOString() : undefined,
         }),
       })
 
@@ -216,6 +222,19 @@ export default function AdminPage() {
               onChange={(e) => setSpread(e.target.value)}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="-3.5"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Game Time (picks lock at this time)
+            </label>
+            <input
+              type="datetime-local"
+              value={gameTime}
+              onChange={(e) => setGameTime(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
